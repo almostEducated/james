@@ -1,0 +1,20 @@
+{
+  "name": "james",
+  "version": "1.0.0",
+  "description": "project for james",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "mon": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "nodemon": "^3.1.7",
+    "puppeteer": "^23.9.0",
+    "readable-stream": "^4.5.2"
+  }
+}
