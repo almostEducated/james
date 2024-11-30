@@ -6,9 +6,7 @@ const ENVIRONMENT = process.env.NODE_ENV;
 
 const controller = require("./controller.js");
 
-console.log(controller);
-
-function defaultRoutes(req, res, next) {
+function staticRoutes(req, res, next) {
   console.log(req.url);
   if (req.url.startsWith("/css")) {
     return res.sendFile(path.join(__dirname, "./frontend/css", "home.css"));
@@ -60,7 +58,7 @@ router.use((req, res, next) => {
   if (req.method === "GET") {
     router.get(
       req.url,
-      defaultRoutes,
+      staticRoutes,
       //   private(publicRoutes),
       (req, res, next) => {
         const func = routeToFunction(req.url, req.method);
