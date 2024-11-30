@@ -9,6 +9,7 @@ class VenueScraper {
   async initialize() {
     this.browser = await puppeteer.launch({
       headless: "new", // Use new Headless mode
+      args: ["--enable-gpu"],
     });
   }
 
