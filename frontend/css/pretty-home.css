@@ -1,15 +1,11 @@
 html, body {
-    background-image: url("../assets/images/grid-paper.png");
+    background-color: #B24C63;
     height: 100%; /* Ensure the body spans the entire viewport */
     margin: 0; /* Remove default margins */
 }
 
 .navbar {
     background-color: black;
-}
-
-.table {
-    border: solid black 2px;
 }
 
 .left-items {
