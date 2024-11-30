@@ -9,6 +9,10 @@ body {
   background-color: black;
 }
 
+.table {
+    border: solid black 2px;
+}
+
 .left-items {
   margin-left: 20px;
 }
