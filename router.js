@@ -10,12 +10,20 @@ console.log(controller);
 
 function defaultRoutes(req, res, next) {
   console.log(req.url);
+  if (req.url.startsWith("/css")) {
+    return res.sendFile(path.join(__dirname, "./frontend/css", "home.css"));
+  }
+  if (req.url.startsWith("/assets")) {
+    // Get the file path after "/assets/"
+    const assetPath = req.url.replace("/assets/", "");
+    return res.sendFile(path.join(__dirname, "./frontend/assets", assetPath));
+  }
   if (req.url === "/axiosConfig.js") {
     return res.sendFile(path.join(__dirname, "./", "axiosConfig.js"));
   }
   if (req.url === "/") {
     if (ENVIRONMENT === "development") console.log("default route", req.url);
-    return res.sendFile(path.join(__dirname, "./", "index.html"));
+    return res.sendFile(path.join(__dirname, "./frontend/html", "home.html"));
   }
   next();
 }
