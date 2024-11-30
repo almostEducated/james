@@ -9,7 +9,15 @@ class VenueScraper {
   async initialize() {
     this.browser = await puppeteer.launch({
       headless: "new", // Use new Headless mode
-      args: ["--enable-gpu"],
+      executablePath: "/usr/bin/chromium-browser", // Point to system Chromium
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--disable-gpu",
+        "--no-first-run",
+      ],
     });
   }
 
