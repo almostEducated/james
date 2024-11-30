@@ -59,7 +59,13 @@ class VenueScraper {
           }
         }
         if (show.title && isShowToday(show.date)) {
-          shows.push(show);
+          let duplicate = false;
+          if (shows.some((el) => el.title === show.title)) {
+            duplicate = true;
+          }
+          if (show.price === "") show.price = "unavaliable";
+
+          if (!duplicate) shows.push(show);
         }
       });
 
@@ -94,13 +100,31 @@ const venueConfigs = [
   {
     venueName: "Johnny Brendas",
     url: "https://johnnybrendas.com/events/",
+    imgSelector: ".eventListImage",
     showSelector: ".eventMainWrapper",
     titleSelector: "a#eventTitle",
     dateSelector: ".eventDateList",
     priceSelector: ".eventCost",
     timeSelector: ".eventDoorStartDate",
   },
-  // Add more venue configs as needed
+  {
+    venueName: "Kung Fu Necktie",
+    url: "https://kungfunecktie.com/events/",
+    showSelector: ".eventWrapper",
+    titleSelector: "a#eventTitle",
+    dateSelector: "#eventDate",
+    priceSelector: ".eventCost",
+    timeSelector: ".eventDoorStartDate",
+  },
+  //   {
+  //     venueName: "Ortlieb's Lounge",
+  //     url: "https://www.eventbrite.com/o/ortliebs-lounge-19833288947",
+  //     showSelector: ".event-card-details",
+  //     titleSelector: 'h3[class$="event-card"]',
+  //     dateSelector: 'p[class$="event-card"]',
+  //     priceSelector: ".eventCost",
+  //     timeSelector: ".eventDoorStartDate",
+  //   },
 ];
 
 async function main() {
