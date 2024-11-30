@@ -16,8 +16,22 @@
     </div>
     <div class="container d-flex">
         <h1 id="welcome-tag"> Welcome to the best concert finder of all time sponsored by Cannonball Club </h1>
-        <button class="btn btn-success" id="button">Touch Me</button>
+
         <button class="btn btn-primary" id="beautify">Beautify</button>
+        <button class="btn btn-success" id="fetchButton">Touch Me</button>
+        <script type="module">
+            import { get } from "./axiosConfig.js";
+      
+            document.getElementById("fetchButton").onclick = async () => {
+              console.log("fethcing");
+              try {
+                const data = await get("/scrape");
+                console.log(data);
+              } catch (error) {
+                console.error("Error:", error);
+              }
+            };
+          </script>
     </div>   
     <div class="table-container">
         <table class="table">
