@@ -6,7 +6,13 @@ const ENVIRONMENT = process.env.NODE_ENV;
 
 const controller = require("./controller.js");
 
+console.log(controller);
+
 function defaultRoutes(req, res, next) {
+  console.log(req.url);
+  if (req.url === "/axiosConfig.js") {
+    return res.sendFile(path.join(__dirname, "./", "axiosConfig.js"));
+  }
   if (req.url === "/") {
     if (ENVIRONMENT === "development") console.log("default route", req.url);
     return res.sendFile(path.join(__dirname, "./", "index.html"));
