@@ -39,6 +39,7 @@ class VenueScraper {
           title: $(element).find(venueConfig.titleSelector).text().trim(),
           date: $(element).find(venueConfig.dateSelector).text().trim(),
           time: $(element).find(venueConfig.timeSelector).text().trim(),
+          price: $(element).find(venueConfig.priceSelector).text().trim(),
           venue: venueConfig.venueName,
           url: url,
         };
@@ -48,9 +49,7 @@ class VenueScraper {
           today.setHours(0, 0, 0, 0);
 
           try {
-            // console.log(dateString);
             const showDate = new Date(dateString);
-            // console.log(showDate);
             showDate.setHours(0, 0, 0, 0);
             showDate.setFullYear(2024);
             return showDate.getTime() === today.getTime();
@@ -98,6 +97,7 @@ const venueConfigs = [
     showSelector: ".eventMainWrapper",
     titleSelector: "a#eventTitle",
     dateSelector: ".eventDateList",
+    priceSelector: ".eventCost",
     timeSelector: ".eventDoorStartDate",
   },
   // Add more venue configs as needed
@@ -106,9 +106,7 @@ const venueConfigs = [
 async function main() {
   const scraper = new VenueScraper();
   await scraper.initialize();
-
   const shows = await scraper.scrapeMultipleVenues(venueConfigs);
-  //   console.log("All shows:", shows);
 
   await scraper.close();
   return shows;
@@ -117,7 +115,7 @@ async function main() {
 const getScrape = async (req, res) => {
   const data = await main();
   console.log(data);
-  res.json({ msg: "hello world" });
+  res.json({ data: data });
 };
 
 module.exports = { getScrape };
