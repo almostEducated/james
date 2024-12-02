@@ -1,5 +1,7 @@
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
+const cron = require("node-cron");
+const db = require("./db");
 
 class VenueScraper {
   constructor() {
@@ -9,7 +11,8 @@ class VenueScraper {
   async initialize() {
     this.browser = await puppeteer.launch({
       headless: "new", // Use new Headless mode
-      executablePath: "/usr/bin/chromium-browser", // Point to system Chromium
+      executablePath:
+        process.platform === "linux" ? "/usr/bin/chromium-browser" : undefined,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -18,6 +21,13 @@ class VenueScraper {
         "--disable-gpu",
         "--no-first-run",
       ],
+    });
+  }
+
+  async initializeDev() {
+    this.browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox"],
     });
   }
 
@@ -104,7 +114,6 @@ class VenueScraper {
   }
 }
 
-// Example usage:
 const venueConfigs = [
   {
     venueName: "Johnny Brendas",
@@ -136,9 +145,48 @@ const venueConfigs = [
   //   },
 ];
 
+const postDB = (data) => {
+  db.run(
+    "INSERT INTO scrape_results (data) VALUES (?)",
+    [JSON.stringify(data)],
+    function (err) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      console.log("Inserted row id is", this.lastID);
+    }
+  );
+};
+
+const getDB = async (req, res) => {
+  db.get(
+    "SELECT data, timestamp FROM scrape_results ORDER BY timestamp DESC LIMIT 1",
+    [],
+    (err, row) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      if (!row) {
+        res.status(404).json({ error: "No data found" });
+        return;
+      }
+      res.json({
+        data: JSON.parse(row.data),
+        timestamp: row.timestamp,
+      });
+    }
+  );
+};
+
 async function main() {
   const scraper = new VenueScraper();
-  await scraper.initialize();
+  if (process.env.NODE_ENV === "development") {
+    await scraper.initializeDev();
+  } else {
+    await scraper.initialize();
+  }
   const shows = await scraper.scrapeMultipleVenues(venueConfigs);
 
   await scraper.close();
@@ -146,9 +194,20 @@ async function main() {
 }
 
 const getScrape = async (req, res) => {
-  const data = await main();
-  console.log(data);
-  res.json({ data: data });
+  try {
+    getDB(req, res);
+  } catch (error) {
+    res.status(500).json({ error: "Scraping failed" });
+  }
 };
+
+cron.schedule("0 3 * * *", async () => {
+  try {
+    const data = await main();
+    postDB(data);
+  } catch (error) {
+    console.error("Scraper failed:", error);
+  }
+});
 
 module.exports = { getScrape };
