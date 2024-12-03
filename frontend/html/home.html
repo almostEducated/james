@@ -21,6 +21,7 @@
 
         <button class="btn btn-primary" id="beautify">Beautify</button>
         <button class="btn btn-success" id="fetchButton">Touch Me</button>
+        <button class="btn btn-primary" id="test">TEST</button>
         <script type="module">
             import { get } from "../../axiosConfig.js";
       
@@ -53,6 +54,38 @@
               }
             };
           </script>
+                <script type="module">
+                    import { get } from "../../axiosConfig.js";
+              
+                    document.getElementById("test").onclick = async () => {
+                        var loading = false;
+                      console.log("fethcing");
+                      if (!loading) {
+                        $("#welcome-tag").append("<h2 class=\"spinner\">Loading</h2>");
+                        loading = true;
+                      }
+                      try {
+                        const data = await get("/test");
+                        console.log(data);
+                        for (const item of data.data) {
+                            $(".table").append("<tr><td>" + item.venue + "</td>"
+                            + "<td>" + item.title + "</td>"
+                            + "<td>" + item.price + "</td>"
+                            + "<td>" + item.date + "</td>"
+                            + "<td>" + item.time + "</td>"
+                            + "<td><a href=\"" + item.url + "\">Buy Tickets</a></td></tr>"
+                        )
+                        }
+        
+                        loading = false;
+                        if (!loading) {
+                            $(".spinner").remove();
+                        }
+                      } catch (error) {
+                        console.error("Error:", error);
+                      }
+                    };
+                  </script>
     </div>   
     <div class="table-container">
         <table class="table">
