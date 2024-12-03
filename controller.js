@@ -20,6 +20,8 @@ class VenueScraper {
         "--disable-accelerated-2d-canvas",
         "--disable-gpu",
         "--no-first-run",
+        "--disable-web-security",
+        "--disable-features=IsolateOrigins,site-per-process",
       ],
     });
   }
@@ -35,10 +37,25 @@ class VenueScraper {
     console.log("scrapping", url);
     try {
       const page = await this.browser.newPage();
-      await page.goto(url, { waitUntil: "networkidle0" });
+      await page.setUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+      );
+      await page.setDefaultNavigationTimeout(90000);
+      await page.setDefaultNavigationTimeout(60000); // 60 seconds
+      await page.goto(url, {
+        waitUntil: "networkidle0",
+        timeout: 60000,
+      });
 
-      // Get page content after JavaScript execution
-      const content = await page.content();
+      // Add error retry logic
+      let content;
+      try {
+        content = await page.content();
+      } catch (error) {
+        console.log(`Retrying ${url} after error:`, error);
+        await page.reload({ waitUntil: "networkidle0", timeout: 60000 });
+        content = await page.content();
+      }
 
       const $ = cheerio.load(content);
 
@@ -193,6 +210,11 @@ async function main() {
   return shows;
 }
 
+const getTest = async (req, res) => {
+  const data = await main();
+  res.json({ data: data });
+};
+
 const getScrape = async (req, res) => {
   try {
     getDB(req, res);
@@ -210,4 +232,4 @@ cron.schedule("0 3 * * *", async () => {
   }
 });
 
-module.exports = { getScrape };
+module.exports = { getScrape, getTest };
