@@ -10,7 +10,7 @@ class VenueScraper {
 
   async initialize() {
     this.browser = await puppeteer.launch({
-      headless: "new", // Use new Headless mode
+      headless: true, // Use new Headless mode
       executablePath:
         process.platform === "linux" ? "/usr/bin/chromium-browser" : undefined,
       args: [
@@ -28,7 +28,7 @@ class VenueScraper {
 
   async initializeDev() {
     this.browser = await puppeteer.launch({
-      headless: "new",
+      headless: true,
       args: ["--no-sandbox"],
     });
   }
@@ -163,6 +163,7 @@ const venueConfigs = [
 ];
 
 const postDB = (data) => {
+  db.run("DELETE FROM scrape_results");
   db.run(
     "INSERT INTO scrape_results (data) VALUES (?)",
     [JSON.stringify(data)],
@@ -212,6 +213,7 @@ async function main() {
 
 const getTest = async (req, res) => {
   const data = await main();
+  postDB(data);
   res.json({ data: data });
 };
 
@@ -232,4 +234,4 @@ cron.schedule("0 3 * * *", async () => {
   }
 });
 
-module.exports = { getScrape, getTest };
+module.exports = { getScrape };
