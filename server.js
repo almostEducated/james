@@ -1,7 +1,6 @@
 const express = require("express");
 const db = require("./db");
 require("dotenv").config();
-//git webhook test6
 
 const http = require("http");
 
