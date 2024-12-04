@@ -37,7 +37,6 @@ class VenueScraper {
     try {
       await page.goto(eventUrl, {
         waitUntil: ["networkidle0", "domcontentloaded"],
-        timeout: 60000,
       });
 
       const content = await page.content();
@@ -60,66 +59,30 @@ class VenueScraper {
     }
   }
 
-  async scrapeVenue(url, venueConfig) {
-    console.log("scrapping", url);
+  async scrapeVenue(page, url, venueConfig) {
+    console.log(`Scraping ${venueConfig.venueName} at ${url}`);
+
     try {
-      const page = await this.browser.newPage();
       await page.setUserAgent(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
       );
       await page.setDefaultNavigationTimeout(90000);
-      await page.goto(url, {
-        waitUntil: "networkidle0",
-        timeout: 60000,
-      });
+      await page.goto(url, { waitUntil: "networkidle0" });
 
-      // Add error retry logic
-      let content;
-      try {
-        content = await page.content();
-      } catch (error) {
-        console.log(`Retrying ${url} after error:`, error);
-        await page.reload({ waitUntil: "networkidle0", timeout: 60000 });
-        content = await page.content();
-      }
-
+      const content = await this.getPageContent(page);
       const $ = cheerio.load(content);
 
-      // Debug the selectors
-      console.log("Looking for shows:", $(venueConfig.showSelector).length);
-
       const shows = [];
-      const eventLinks = [];
-
-      // Use venue-specific selectors to find show information
-      $(venueConfig.showSelector).each((_, element) => {
-        const eventURL = $(element).find(venueConfig.linkSelector).attr("href");
-        const date = $(element).find(venueConfig.dateSelector).text().trim();
-        if (isShowToday(date)) {
-          eventLinks.push(eventURL);
-        }
-      });
-
-      function isShowToday(dateString) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        try {
-          const showDate = new Date(dateString);
-          showDate.setHours(0, 0, 0, 0);
-          showDate.setFullYear(2024);
-          return showDate.getTime() === today.getTime();
-        } catch (error) {
-          console.error("Error parsing date:", dateString);
-          return false;
-        }
-      }
+      const eventLinks = this.getEventLinks($, venueConfig);
 
       for (const eventUrl of eventLinks) {
         const show = await this.scrapeEventPage(page, eventUrl, venueConfig);
         if (show) shows.push(show);
+
+        // Add small delay between event pages
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
-      await page.close();
       return shows;
     } catch (error) {
       console.error(`Error scraping ${url}:`, error);
@@ -127,12 +90,61 @@ class VenueScraper {
     }
   }
 
+  async getPageContent(page) {
+    try {
+      return await page.content();
+    } catch (error) {
+      console.log("Retrying page load after error:", error);
+      await page.reload({ waitUntil: "networkidle0" });
+      return await page.content();
+    }
+  }
+
+  getEventLinks($, venueConfig) {
+    const eventLinks = [];
+    $(venueConfig.showSelector).each((_, element) => {
+      const eventURL = $(element).find(venueConfig.linkSelector).attr("href");
+      const date = $(element).find(venueConfig.dateSelector).text().trim();
+      if (this.isShowToday(date)) {
+        eventLinks.push(eventURL);
+      }
+    });
+    return eventLinks;
+  }
+
+  isShowToday(dateString) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    try {
+      const showDate = new Date(dateString);
+      showDate.setHours(0, 0, 0, 0);
+      showDate.setFullYear(2024);
+      return showDate.getTime() === today.getTime();
+    } catch (error) {
+      console.error("Error parsing date:", dateString);
+      return false;
+    }
+  }
+
   async scrapeMultipleVenues(venueConfigs) {
     const allShows = [];
 
     for (const config of venueConfigs) {
-      const shows = await this.scrapeVenue(config.url, config);
-      allShows.push(...shows);
+      try {
+        console.log(`Starting to scrape ${config.venueName}`);
+        const page = await this.browser.newPage();
+
+        const shows = await this.scrapeVenue(page, config.url, config);
+        allShows.push(...shows);
+
+        await page.close();
+
+        // Add delay between venues to prevent rate limiting
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error(`Failed to scrape ${config.venueName}:`, error);
+        continue;
+      }
     }
 
     return allShows;
@@ -211,7 +223,7 @@ const venueConfigs = [
       dateSelector: "span.sc-1eku3jf-16",
       imgSelector: ".sc-1eku3jf-10",
       titleSelector: ".sc-1eku3jf-14",
-      priceSelector: ".sc-1yxtdiz-5",
+      priceSelector: "#quickpick-buy-button-qp-0",
       timeSelector: "span.sc-1eku3jf-16",
     },
   },
