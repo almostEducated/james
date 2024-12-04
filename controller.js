@@ -68,7 +68,6 @@ class VenueScraper {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
       );
       await page.setDefaultNavigationTimeout(90000);
-      await page.setDefaultNavigationTimeout(60000); // 60 seconds
       await page.goto(url, {
         waitUntil: "networkidle0",
         timeout: 60000,
@@ -268,9 +267,9 @@ async function main() {
 }
 
 const getForceScrape = async (req, res) => {
+  res.sendStatus(201);
   const data = await main();
   postDB(data);
-  res.json({ data: data });
 };
 
 const getScrape = async (req, res) => {
