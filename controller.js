@@ -72,18 +72,21 @@ class VenueScraper {
       const content = await this.getPageContent(page);
       const $ = cheerio.load(content);
 
-      const shows = [];
+      const shows = {};
       const eventLinks = this.getEventLinks($, venueConfig);
 
       for (const eventUrl of eventLinks) {
         const show = await this.scrapeEventPage(page, eventUrl, venueConfig);
-        if (show) shows.push(show);
+
+        if (show && !shows[show.title]) {
+          shows[show.title] = show;
+        }
 
         // Add small delay between event pages
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
-      return shows;
+      return Object.values(shows);
     } catch (error) {
       console.error(`Error scraping ${url}:`, error);
       return [];
@@ -181,7 +184,7 @@ const venueConfigs = [
     eventPage: {
       dateSelector: ".eventStDate",
       imgSelector: ".rhp-events-event-image",
-      titleSelector: "a#eventTitle",
+      titleSelector: "#eventTitle > h1",
       priceSelector: ".eventCost",
       timeSelector: ".eventDoorStartDate",
     },
