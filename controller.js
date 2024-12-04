@@ -43,8 +43,6 @@ class VenueScraper {
       const content = await page.content();
       const $ = cheerio.load(content);
 
-      console.log($(venueConfig.eventPage.imgSelector));
-
       return {
         title: $(venueConfig.eventPage.titleSelector).text().trim(),
         date: $(venueConfig.eventPage.dateSelector).text().trim(),
@@ -89,7 +87,7 @@ class VenueScraper {
       const $ = cheerio.load(content);
 
       // Debug the selectors
-      console.log("Looking for dates:", $(venueConfig.dateSelector).length);
+      console.log("Looking for shows:", $(venueConfig.showSelector).length);
 
       const shows = [];
       const eventLinks = [];
@@ -98,6 +96,8 @@ class VenueScraper {
       $(venueConfig.showSelector).each((_, element) => {
         const eventURL = $(element).find(venueConfig.linkSelector).attr("href");
         const date = $(element).find(venueConfig.dateSelector).text().trim();
+        console.log(eventURL);
+        console.log(date);
         if (isShowToday(date)) {
           eventLinks.push(eventURL);
         }
@@ -177,6 +177,21 @@ const venueConfigs = [
       timeSelector: ".eventDoorStartDate",
     },
   },
+  {
+    venueName: "MilkBoy Philadelphia",
+    url: "https://milkboyphilly.com/events/",
+    showSelector: ".listings-block-list__listing",
+    linkSelector: ".JS--buyTicketsButton",
+    dateSelector: ".listingDateTime > span",
+    eventPage: {
+      dateSelector: ".EventDetailsTitle__Date-sc-8ebcf47a-2",
+      imgSelector: ".EventDetailsImage__Container-sc-869461fe-0",
+      titleSelector: ".EventDetailsTitle__Title-sc-8ebcf47a-0",
+      priceSelector: ".EventDetailsCallToAction__Price-sc-a993917-6 > span",
+      timeSelector:
+        ".TruncatedMarkdown__Truncated-sc-3744924d-2 p:nth-child(3)",
+    },
+  },
   // {
   //   venueName: "Ortlieb's Lounge",
   //   url: "https://www.eventbrite.com/o/ortliebs-lounge-19833288947",
@@ -189,20 +204,20 @@ const venueConfigs = [
   //   priceSelector: ".eventCost",
   //   timeSelector: ".eventDoorStartDate",
   // },
-  // {
-  //   venueName: "The Fillmore",
-  //   url: "https://www.thefillmorephilly.com/shows",
-  //   linkSelector: "a.css-l1pvlg",
-  //   showSelector: ".chakra-linkbox",
-  //   dateSelector: ".chakra-text css-rfy86g",
-  //   eventPage: {
-  //     dateSelector: "span.sc-1eku3jf-16 kqyHHD",
-  //     imgSelector: ".sc-1eku3jf-11 fhKWSi",
-  //     titleSelector: ".sc-1eku3jf-14 dmTQnE",
-  //     priceSelector: '["date-bdd"]="quick-pick-price-button"',
-  //     timeSelector: "span.sc-1eku3jf-16 kqyHHD",
-  //   },
-  // },
+  {
+    venueName: "The Fillmore",
+    url: "https://www.thefillmorephilly.com/shows",
+    linkSelector: ".css-l1pvlg > a",
+    showSelector: ".chakra-linkbox",
+    dateSelector: ".css-1he4v4k > p:nth-child(2)",
+    eventPage: {
+      dateSelector: "span.sc-1eku3jf-16",
+      imgSelector: ".sc-1eku3jf-10",
+      titleSelector: ".sc-1eku3jf-14",
+      // priceSelector: ".sc-1yxtdiz-5 > button",
+      timeSelector: "span.sc-1eku3jf-16",
+    },
+  },
 ];
 
 const postDB = (data) => {
