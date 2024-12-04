@@ -36,7 +36,7 @@ class VenueScraper {
   async scrapeEventPage(page, eventUrl, venueConfig) {
     try {
       await page.goto(eventUrl, {
-        waitUntil: "networkidle0",
+        waitUntil: ["networkidle0", "domcontentloaded"],
         timeout: 60000,
       });
 
@@ -96,8 +96,6 @@ class VenueScraper {
       $(venueConfig.showSelector).each((_, element) => {
         const eventURL = $(element).find(venueConfig.linkSelector).attr("href");
         const date = $(element).find(venueConfig.dateSelector).text().trim();
-        console.log(eventURL);
-        console.log(date);
         if (isShowToday(date)) {
           eventLinks.push(eventURL);
         }
@@ -214,7 +212,7 @@ const venueConfigs = [
       dateSelector: "span.sc-1eku3jf-16",
       imgSelector: ".sc-1eku3jf-10",
       titleSelector: ".sc-1eku3jf-14",
-      // priceSelector: ".sc-1yxtdiz-5 > button",
+      priceSelector: ".sc-1yxtdiz-5",
       timeSelector: "span.sc-1eku3jf-16",
     },
   },
