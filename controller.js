@@ -136,6 +136,7 @@ class VenueScraper {
     for (const config of venueConfigs) {
       try {
         if (currentPage) {
+          console.log(`closing previous page`);
           await currentPage.close();
         }
         currentPage = await this.browser.newPage();
@@ -148,6 +149,7 @@ class VenueScraper {
     }
 
     if (currentPage) {
+      console.log("closing page");
       await currentPage.close();
     }
     return allShows;
