@@ -131,22 +131,25 @@ class VenueScraper {
 
   async scrapeMultipleVenues(venueConfigs) {
     const allShows = [];
+    let currentPage = null;
 
     for (const config of venueConfigs) {
-      let page = null;
       try {
-        console.log(`Starting to scrape ${config.venueName}`);
-        const page = await this.browser.newPage();
-        const shows = await this.scrapeVenue(page, config.url, config);
+        if (currentPage) {
+          await currentPage.close();
+        }
+        currentPage = await this.browser.newPage();
+        const shows = await this.scrapeVenue(currentPage, config.url, config);
         allShows.push(...shows);
         await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (error) {
         console.error(`Failed to scrape ${config.venueName}:`, error);
-      } finally {
-        if (page) await page.close();
       }
     }
 
+    if (currentPage) {
+      await currentPage.close();
+    }
     return allShows;
   }
 
