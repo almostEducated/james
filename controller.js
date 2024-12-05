@@ -133,20 +133,17 @@ class VenueScraper {
     const allShows = [];
 
     for (const config of venueConfigs) {
+      let page = null;
       try {
         console.log(`Starting to scrape ${config.venueName}`);
         const page = await this.browser.newPage();
-
         const shows = await this.scrapeVenue(page, config.url, config);
         allShows.push(...shows);
-
-        await page.close();
-
-        // Add delay between venues to prevent rate limiting
         await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (error) {
         console.error(`Failed to scrape ${config.venueName}:`, error);
-        continue;
+      } finally {
+        if (page) await page.close();
       }
     }
 
