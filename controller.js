@@ -185,7 +185,7 @@ const venueConfigs = [
       dateSelector: ".eventStDate",
       imgSelector: ".rhp-events-event-image",
       titleSelector: "#eventTitle > h1",
-      priceSelector: ".eventCost",
+      priceSelector: ".eventCost > span",
       timeSelector: ".eventDoorStartDate",
     },
   },
