@@ -20,8 +20,8 @@ class VenueScraper {
         "--disable-accelerated-2d-canvas",
         "--disable-gpu",
         "--no-first-run",
-        "--disable-web-security",
-        "--disable-features=IsolateOrigins,site-per-process",
+        // "--disable-web-security",
+        // "--disable-features=IsolateOrigins,site-per-process",
       ],
     });
   }
@@ -36,18 +36,24 @@ class VenueScraper {
   async scrapeEventPage(page, eventUrl, venueConfig) {
     try {
       await page.goto(eventUrl, {
-        waitUntil: ["networkidle0", "domcontentloaded"],
+        waitUntil: ["networkidle0", "domcontentloaded", "load"],
       });
 
       const content = await page.content();
       const $ = cheerio.load(content);
+
+      console.log(
+        venueConfig.venueName,
+        $(venueConfig.eventPage.titleSelector).text().trim()
+      );
 
       return {
         title: $(venueConfig.eventPage.titleSelector).text().trim(),
         date: $(venueConfig.eventPage.dateSelector).text().trim(),
         time: $(venueConfig.eventPage.timeSelector).text().trim(),
         price:
-          $(venueConfig.eventPage.priceSelector).text().trim() || "unavailable",
+          $(venueConfig.eventPage.priceSelector).text().trim() ||
+          "Click Link for Pricing",
         description: $(venueConfig.eventPage.descriptionSelector).text().trim(),
         image: $(venueConfig.eventPage.imgSelector).find("img").attr("src"),
         venue: venueConfig.venueName,
@@ -63,13 +69,13 @@ class VenueScraper {
     console.log(`Scraping ${venueConfig.venueName} at ${url}`);
 
     try {
-      await page.setUserAgent(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-      );
       await page.setDefaultNavigationTimeout(90000);
-      await page.goto(url, { waitUntil: "networkidle0" });
+      await page.goto(url, {
+        waitUntil: ["networkidle0", "domcontentloaded", "load"],
+      });
 
       const content = await this.getPageContent(page);
+
       const $ = cheerio.load(content);
 
       const shows = {};
@@ -105,9 +111,14 @@ class VenueScraper {
 
   getEventLinks($, venueConfig) {
     const eventLinks = [];
+    console.log(venueConfig.venueName, $(venueConfig.showSelector).length);
+
     $(venueConfig.showSelector).each((_, element) => {
+      console.log(element);
       const eventURL = $(element).find(venueConfig.linkSelector).attr("href");
       const date = $(element).find(venueConfig.dateSelector).text().trim();
+
+      console.log(eventURL, date);
       if (this.isShowToday(date)) {
         eventLinks.push(eventURL);
       }
@@ -194,16 +205,15 @@ const venueConfigs = [
   {
     venueName: "MilkBoy Philadelphia",
     url: "https://milkboyphilly.com/events/",
-    showSelector: ".listings-block-list__listing",
-    linkSelector: ".JS--buyTicketsButton",
+    linkSelector: ".listing__titleLink",
+    showSelector: ".listing__details",
     dateSelector: ".listingDateTime > span",
     eventPage: {
-      dateSelector: ".EventDetailsTitle__Date-sc-8ebcf47a-2",
-      imgSelector: ".EventDetailsImage__Container-sc-869461fe-0",
-      titleSelector: ".EventDetailsTitle__Title-sc-8ebcf47a-0",
+      dateSelector: ".singleListingGrid__date > span",
+      imgSelector: ".opacityWrap",
+      titleSelector: ".singleListing__title",
       priceSelector: ".EventDetailsCallToAction__Price-sc-a993917-6 > span",
-      timeSelector:
-        ".TruncatedMarkdown__Truncated-sc-3744924d-2 p:nth-child(3)",
+      timeSelector: ".listing-doors",
     },
   },
   // {
@@ -218,20 +228,20 @@ const venueConfigs = [
   //   priceSelector: ".eventCost",
   //   timeSelector: ".eventDoorStartDate",
   // },
-  {
-    venueName: "The Fillmore",
-    url: "https://www.thefillmorephilly.com/shows",
-    linkSelector: ".css-l1pvlg > a",
-    showSelector: ".chakra-linkbox",
-    dateSelector: ".css-1he4v4k > p:nth-child(2)",
-    eventPage: {
-      dateSelector: "span.sc-1eku3jf-16",
-      imgSelector: ".sc-1eku3jf-10",
-      titleSelector: ".sc-1eku3jf-14",
-      priceSelector: "#quickpick-buy-button-qp-0",
-      timeSelector: "span.sc-1eku3jf-16",
-    },
-  },
+  // {
+  //   venueName: "The Fillmore",
+  //   url: "https://www.thefillmorephilly.com/shows",
+  //   linkSelector: ".css-l1pvlg > a",
+  //   showSelector: ".chakra-linkbox",
+  //   dateSelector: ".css-1he4v4k > p:nth-child(2)",
+  //   eventPage: {
+  //     dateSelector: "span.sc-1eku3jf-16",
+  //     imgSelector: ".sc-1eku3jf-10",
+  //     titleSelector: ".sc-1eku3jf-14",
+  //     priceSelector: "#quickpick-buy-button-qp-0",
+  //     timeSelector: "span.sc-1eku3jf-16",
+  //   },
+  // },
 ];
 
 const postDB = (data) => {
@@ -278,6 +288,7 @@ async function main() {
     await scraper.initialize();
   }
   const shows = await scraper.scrapeMultipleVenues(venueConfigs);
+  console.log(shows);
 
   await scraper.close();
   return shows;
