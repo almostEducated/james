@@ -42,11 +42,6 @@ class VenueScraper {
       const content = await page.content();
       const $ = cheerio.load(content);
 
-      console.log(
-        venueConfig.venueName,
-        $(venueConfig.eventPage.titleSelector).text().trim()
-      );
-
       return {
         title: $(venueConfig.eventPage.titleSelector).text().trim(),
         date: $(venueConfig.eventPage.dateSelector).text().trim(),
@@ -111,14 +106,16 @@ class VenueScraper {
 
   getEventLinks($, venueConfig) {
     const eventLinks = [];
-    console.log(venueConfig.venueName, $(venueConfig.showSelector).length);
+    console.log(
+      venueConfig.venueName,
+      "Searching",
+      $(venueConfig.showSelector).length,
+      "shows"
+    );
 
     $(venueConfig.showSelector).each((_, element) => {
-      console.log(element);
       const eventURL = $(element).find(venueConfig.linkSelector).attr("href");
       const date = $(element).find(venueConfig.dateSelector).text().trim();
-
-      console.log(eventURL, date);
       if (this.isShowToday(date)) {
         eventLinks.push(eventURL);
       }
@@ -152,6 +149,7 @@ class VenueScraper {
         }
         currentPage = await this.browser.newPage();
         const shows = await this.scrapeVenue(currentPage, config.url, config);
+        console.log("found", shows.length, "shows");
         allShows.push(...shows);
         await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (error) {
