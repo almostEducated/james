@@ -270,8 +270,15 @@ const getDB = async (req, res) => {
         res.status(404).json({ error: "No data found" });
         return;
       }
+      let data = JSON.parse(row.data);
+      if (data.length === 0) {
+        async () => {
+          data = await main();
+          postDB(data);
+        };
+      }
       res.json({
-        data: JSON.parse(row.data),
+        data: data,
         timestamp: row.timestamp,
       });
     }
