@@ -258,36 +258,24 @@ const postDB = (data) => {
 };
 
 const getDB = async (req, res) => {
-  try {
-    const row = await new Promise((resolve, reject) => {
-      db.get(
-        "SELECT data, timestamp FROM scrape_results ORDER BY timestamp DESC LIMIT 1",
-        [],
-        (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        }
-      );
-    });
-
-    if (!row) {
-      return res.status(404).json({ error: "No data found" });
+  db.get(
+    "SELECT data, timestamp FROM scrape_results ORDER BY timestamp DESC LIMIT 1",
+    [],
+    (err, row) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      if (!row) {
+        res.status(404).json({ error: "No data found" });
+        return;
+      }
+      res.json({
+        data: JSON.parse(row.data),
+        timestamp: row.timestamp,
+      });
     }
-
-    let data = JSON.parse(row.data);
-
-    if (data.length === 0) {
-      data = await main();
-      await postDB(data);
-    }
-
-    res.json({
-      data: data,
-      timestamp: row.timestamp,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  );
 };
 
 async function main() {
